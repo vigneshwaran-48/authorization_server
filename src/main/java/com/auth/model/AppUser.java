@@ -38,7 +38,7 @@ public class AppUser {
 			@JoinColumn(name = "USERS_ID", referencedColumnName = "ID") }, inverseJoinColumns = {
 					@JoinColumn(name = "AUTHORITIES_ID", referencedColumnName = "ID") })
 	private Set<Authority> authorities;
-	
+		
 	@DateTimeFormat(pattern = "dd-mm-yyyy")
 	private Date dob;
 	

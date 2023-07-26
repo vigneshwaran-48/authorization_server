@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.Nullable;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
@@ -21,7 +22,9 @@ import com.auth.exception.UserExistsException;
 import com.auth.exception.UserNotFoundException;
 import com.auth.model.AppUser;
 import com.auth.model.PublicUserDetails;
+import com.auth.model.UserProfileImage;
 import com.auth.service.AppUserService;
+import com.auth.service.UserProfileImageService;
 
 @RestController
 @RequestMapping("/api/user")
@@ -31,6 +34,8 @@ public class UserController {
 	private static final String ERROR = "error";
 	@Autowired
 	private AppUserService appUserService;
+	@Autowired
+	private UserProfileImageService userProfileImageService;
 	
 	@PostMapping
 	public ResponseEntity<UserControllerResponse> createUser(
@@ -102,6 +107,28 @@ public class UserController {
 		Map<String, String> message = Map.of(DESCRIPTION, "success");
 		return ResponseEntity.ok()
 							 .body(new UserControllerResponse(message, user));
+	}
+	@GetMapping("me/profile-image")
+	public ResponseEntity<byte[]> getProfileImage(Principal principal) {
+		if(principal == null) {
+			throw new AuthenticationCredentialsNotFoundException("Not authenticated");
+		}
+		byte[] profileImageBytes = null;
+		try {
+			AppUser appUser = appUserService.findByUserName(principal.getName());
+			profileImageBytes = userProfileImageService.getImage(appUser.getId(), 
+					"profile.png");
+			
+			return ResponseEntity.ok()
+							.contentType(MediaType.valueOf("image/png"))
+							.body(profileImageBytes);
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+			Map<String, String> message = Map.of(ERROR, e.getMessage());
+			return ResponseEntity.internalServerError()
+								 .body(null);
+		}
 	}
 	@GetMapping("{id}")
 	public ResponseEntity<UserControllerResponse> getUser(
