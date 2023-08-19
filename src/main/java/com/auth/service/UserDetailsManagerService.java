@@ -51,7 +51,8 @@ public class UserDetailsManagerService implements UserDetailsManager, AppUserSer
 			authorities.add(new SimpleGrantedAuthority(authority.getAuthority()));
 		});
 		
-		User user = new User(appUser.getUsername(), appUser.getPassword(),
+		String name = appUser.getId() != null ? appUser.getId().toString() : String.valueOf(-1);
+		User user = new User(name, appUser.getPassword(),
 							 appUser.getEnabled(), appUser.getAccountNonExpired(),
 							 appUser.getCredentialsNonExpired(), appUser.getAccountNonExpired(),
 							 authorities);
