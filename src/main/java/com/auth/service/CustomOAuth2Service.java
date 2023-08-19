@@ -11,6 +11,7 @@ import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserServ
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.stereotype.Service;
 
 import com.auth.model.AppUser;
 import com.auth.model.AuthProvider;
@@ -20,6 +21,7 @@ import com.auth.model.oauth.OAuth2UserInfo;
 import com.auth.model.oauth.OAuth2UserInfoFactory;
 import com.auth.repository.UserRepository;
 
+@Service
 public class CustomOAuth2Service extends DefaultOAuth2UserService {
 
 	@Autowired

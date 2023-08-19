@@ -11,30 +11,18 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.oauth2.server.resource.OAuth2ResourceServerConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.oauth2.core.AuthorizationGrantType;
-import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
-import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.server.authorization.InMemoryOAuth2AuthorizationConsentService;
-import org.springframework.security.oauth2.server.authorization.InMemoryOAuth2AuthorizationService;
-import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsentService;
-import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationService;
-import org.springframework.security.oauth2.server.authorization.client.InMemoryRegisteredClientRepository;
-import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
-import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
@@ -43,12 +31,12 @@ import org.springframework.security.oauth2.server.authorization.settings.OAuth2T
 import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 
-import com.auth.service.RegisteredClientRepositoryImpl;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.auth.repository.HttpCookieOAuth2AuthorizationRequestRepository;
+import com.auth.service.CustomOAuth2Service;
+import com.auth.service.OAuth2AuthenticationFailureHandler;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.JWKSource;
@@ -58,6 +46,15 @@ import com.nimbusds.jose.proc.SecurityContext;
 @EnableWebSecurity
 public class OAuthConfig {
 
+	@Autowired
+    private HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
+	
+	@Autowired
+    private CustomOAuth2Service customOAuth2UserService;
+	
+	@Autowired
+    private OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
+	
 	@Bean
 	@Order(1)
 	SecurityFilterChain asSecurityFilterChain(HttpSecurity http) throws Exception {
@@ -79,6 +76,11 @@ public class OAuthConfig {
 	@Order(2)
 	SecurityFilterChain appSecurityFilterChain(HttpSecurity http) throws Exception {
 		return http
+				.cors()
+				.and()
+				.sessionManagement()
+					.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+					.and()
 				.authorizeHttpRequests(authorize ->
 					{
 						try {
@@ -103,9 +105,20 @@ public class OAuthConfig {
 						}
 					})
 				.oauth2Login()
-				.loginPage("/oauth")
+					.loginPage("/oauth")
+					.authorizationEndpoint()
+					.baseUri("/oauth2/authorize")
+					.authorizationRequestRepository(httpCookieOAuth2AuthorizationRequestRepository)
 				.and()
-				.csrf().disable()
+					.redirectionEndpoint()
+					.baseUri("/oauth2/callback/*")
+				.and()
+					.userInfoEndpoint()
+					.userService(customOAuth2UserService)
+				.and()
+					.failureHandler(oAuth2AuthenticationFailureHandler)
+				.and()
+					.csrf().disable()
 				.build();
 		
 	}
