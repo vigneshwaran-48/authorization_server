@@ -16,6 +16,7 @@ import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.stereotype.Service;
 
 import com.auth.common.exception.UserExistsException;
+import com.auth.common.exception.UserNotFoundException;
 import com.auth.common.model.CommonUserDetails;
 import com.auth.common.service.AppUserService;
 import com.auth.model.AppUser;
@@ -162,5 +163,17 @@ public class UserDetailsManagerService implements UserDetailsManager, AppUserSer
 	public CommonUserDetails findByUserName(String name) {
 		AppUser user = userRepository.findByUsername(name);
 		return AppUser.toCommonUserDetails(user);
+	}
+
+	@Override
+	public CommonUserDetails findByUserEmail(String email) throws UserNotFoundException {
+		AppUser user = userRepository.findByEmail(email)
+								.orElseThrow(() -> new UserNotFoundException("Email not found"));
+		
+		CommonUserDetails userDetails = null;
+		if(user != null) {
+			userDetails = AppUser.toCommonUserDetails(user);
+		}
+		return userDetails;
 	}
 }

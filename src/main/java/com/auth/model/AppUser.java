@@ -11,6 +11,8 @@ import com.auth.common.model.CommonUserDetails;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.JoinColumn;
@@ -55,10 +57,16 @@ public class AppUser {
 	@NonNull
 	private String email;
 	
+	@Enumerated(EnumType.STRING)
+	private AuthProvider provider;
+	
+	private String providerId;
+	
 	private Boolean accountNonExpired;
 	private Boolean accountNonLocked;
 	private Boolean credentialsNonExpired;
 	private Boolean enabled;
+	
 	public Integer getId() {
 		return id;
 	}
@@ -139,6 +147,20 @@ public class AppUser {
 	}
 	public void setMobile(String mobile) {
 		this.mobile = mobile;
+	}
+	
+	
+	public AuthProvider getProvider() {
+		return provider;
+	}
+	public void setProvider(AuthProvider provider) {
+		this.provider = provider;
+	}
+	public String getProviderId() {
+		return providerId;
+	}
+	public void setProviderId(String providerId) {
+		this.providerId = providerId;
 	}
 	
 	public AppUser(Integer id, String username, String password, String firstName, String lastName,
