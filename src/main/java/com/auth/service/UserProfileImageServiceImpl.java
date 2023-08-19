@@ -5,6 +5,8 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.auth.common.model.CommonUserProfileImage;
+import com.auth.common.service.UserProfileImageService;
 import com.auth.model.UserProfileImage;
 import com.auth.repository.UserProfileImageRepository;
 
@@ -25,7 +27,7 @@ public class UserProfileImageServiceImpl implements UserProfileImageService {
 	}
 	
 	@Override
-	public void uploadImage(UserProfileImage userImage) {
+	public void uploadImage(CommonUserProfileImage userImage) {
 		// TODO Auto-generated method stub
 		
 	}

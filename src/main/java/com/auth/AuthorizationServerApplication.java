@@ -24,27 +24,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @SpringBootApplication
-@RestController
 public class AuthorizationServerApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(AuthorizationServerApplication.class, args);
 	}
-	
-	
-	
-	
-//	@Bean
-//	public ClientSettings clientSettings() {
-//		return ClientSettings.builder()
-//							 .requireAuthorizationConsent(true)
-//							 .requireProofKey(false)
-//							 .build();
-//	}
-//	
-//	@GetMapping("/hi")
-//	public Map<String, String> hello() {
-//		return Map.of("message", "Hello");	
-//	}
 
 }

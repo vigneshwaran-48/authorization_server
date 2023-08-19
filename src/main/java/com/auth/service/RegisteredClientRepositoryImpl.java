@@ -44,7 +44,7 @@ public class RegisteredClientRepositoryImpl implements RegisteredClientRepositor
 	@Override
 	public void save(RegisteredClient registeredClient) {
 		Assert.notNull(registeredClient, "Registered Client can't be null");
-		Client client = toClient(registeredClient);
+		Client client = Client.toClient(registeredClient);
 		clientRepository.save(client);
 	}
 
@@ -85,29 +85,6 @@ public class RegisteredClientRepositoryImpl implements RegisteredClientRepositor
 		builder.tokenSettings(TokenSettings.withSettings(tokenSettingsMap).build());
 
 		return builder.build();
-	}
-
-	private Client toClient(RegisteredClient registeredClient) {
-		List<String> clientAuthMethods = registeredClient.getClientAuthenticationMethods().stream()
-				.map(ClientAuthenticationMethod::getValue).collect(Collectors.toList());
-		List<String> authorizationGrantTypes = registeredClient.getAuthorizationGrantTypes().stream()
-				.map(AuthorizationGrantType::getValue).collect(Collectors.toList());
-
-		Client client = new Client();
-		client.setId(registeredClient.getId());
-		client.setClientId(registeredClient.getClientId());
-		client.setClientName(registeredClient.getClientName());
-		client.setClientSecret(registeredClient.getClientSecret());
-		client.setClientSecretExpiresAt(registeredClient.getClientSecretExpiresAt());
-		client.setClientIdIssuedAt(registeredClient.getClientIdIssuedAt());
-		client.setClientAuthenticationMethods(StringUtils.collectionToCommaDelimitedString(clientAuthMethods));
-		client.setAuthorizationGrantTypes(StringUtils.collectionToCommaDelimitedString(authorizationGrantTypes));
-		client.setRedirectUris(StringUtils.collectionToCommaDelimitedString(registeredClient.getRedirectUris()));
-		client.setScopes(StringUtils.collectionToCommaDelimitedString(registeredClient.getScopes()));
-		client.setClientSettings(writeMap(registeredClient.getClientSettings().getSettings()));
-		client.setTokenSettings(writeMap(registeredClient.getTokenSettings().getSettings()));
-
-		return client;
 	}
 
 	private Map<String, Object> parseMap(String data) {

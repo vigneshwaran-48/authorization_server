@@ -69,7 +69,7 @@ public class OAuthConfig {
 				.oidc(withDefaults())
 				.and()
 				.exceptionHandling(e -> e
-				.authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login")))
+				.authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/oauth")))
 				.oauth2ResourceServer(OAuth2ResourceServerConfigurer::jwt)
 				.build();
 
@@ -84,7 +84,8 @@ public class OAuthConfig {
 						try {
 							authorize
 								.requestMatchers("/index.html", "/static/**",
-										"/*.ico", "/*.json", "/*.png", "/*.jpg", "/*jpeg", "/*.html"
+										"/*.ico", "/*.json", "/*.png", "/*.jpg", 
+										"/*jpeg", "/*.html", "/authenticate"
 										)
 								.permitAll()
 								.anyRequest().authenticated()
@@ -96,59 +97,23 @@ public class OAuthConfig {
 									.passwordParameter("password")
 									.permitAll()
 								.and()
-									.csrf().disable()
-								.httpBasic();
-								
+									.csrf().disable();								
 						} catch (Exception e) {
 							e.printStackTrace();
 						}
 					})
 				.oauth2Login()
 				.loginPage("/oauth")
-//				.httpBasic()
-//				.and()
 				.and()
 				.csrf().disable()
 				.build();
 		
 	}
-	
-//	@Bean
-//	public UserDetailsService userDetailsService() {
-//		var user1 = User.withUsername("user")
-//				.password(passwordEncoder().encode("password"))
-//				.authorities("read")
-//				.build();
-//		return new InMemoryUserDetailsManager(user1);
-//	}
 
 	@Bean
 	public BCryptPasswordEncoder passwordEncoder() {
 		return new BCryptPasswordEncoder();
 	}
-	
-//	@Bean
-//	RegisteredClientRepository registeredClientRepository() {
-//		RegisteredClient registeredClient = RegisteredClient.withId(UUID.randomUUID().toString())
-//				.clientId("todo-client")
-//				.clientSecret(passwordEncoder().encode("todo-password"))
-//				.scope("read")
-//				.scope(OidcScopes.OPENID)
-//				.scope(OidcScopes.PROFILE)
-//				.redirectUri("http://127.0.0.1:9191")
-//				.redirectUri("http://127.0.0.1:9191/login/oauth2/code/spring")
-//				.clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
-//				.authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
-//				.authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
-//				.authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
-//				.tokenSettings(tokenSettings())
-//				.clientSettings(clientSettings())
-//				.build();
-//		
-//		RegisteredClientRepository repository = new RegisteredClientRepositoryImpl();
-//		repository.save(registeredClient);
-//		return repository;
-//	}
 
 	@Bean
 	public TokenSettings tokenSettings() {
@@ -171,16 +136,6 @@ public class OAuthConfig {
 		return AuthorizationServerSettings.builder().build();
 	}
 
-//	@Bean
-//	OAuth2AuthorizationService authorizationService() {
-//		return new InMemoryOAuth2AuthorizationService();
-//	}
-//	
-//	@Bean
-//	public OAuth2AuthorizationConsentService authorizationConsentService() {
-//		return new InMemoryOAuth2AuthorizationConsentService();
-//	}
-	
 	@Bean
 	OAuth2TokenCustomizer<JwtEncodingContext> tokenCustomizer() {
 		return context -> {
@@ -215,7 +170,8 @@ public class OAuthConfig {
 		KeyPair keyPair = generateRsaKey();
 		RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
 		RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
-		return new RSAKey.Builder(publicKey).privateKey(privateKey).keyID(UUID.randomUUID().toString()).build();
+		return new RSAKey.Builder(publicKey).privateKey(privateKey)
+						.keyID(UUID.randomUUID().toString()).build();
 	}
 
 	static KeyPair generateRsaKey() {

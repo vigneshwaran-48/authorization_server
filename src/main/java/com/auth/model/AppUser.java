@@ -6,6 +6,8 @@ import java.util.Set;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.lang.NonNull;
 
+import com.auth.common.model.CommonUserDetails;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -33,6 +35,12 @@ public class AppUser {
 	@NonNull
 	private String password;
 	
+	@Column(name = "first_name")
+	private String firstName;
+	
+	@Column(name = "last_name")
+	private String lastName;
+	
 	@ManyToMany(cascade = CascadeType.MERGE, fetch = FetchType.EAGER)
 	@JoinTable(name = "user_authorities", joinColumns = {
 			@JoinColumn(name = "USERS_ID", referencedColumnName = "ID") }, inverseJoinColumns = {
@@ -41,6 +49,11 @@ public class AppUser {
 		
 	@DateTimeFormat(pattern = "dd-mm-yyyy")
 	private Date dob;
+	
+	private String mobile;
+	
+	@NonNull
+	private String email;
 	
 	private Boolean accountNonExpired;
 	private Boolean accountNonLocked;
@@ -101,19 +114,82 @@ public class AppUser {
 	public void setDob(Date dob) {
 		this.dob = dob;
 	}
-	public AppUser(Integer id, String username, String password, Set<Authority> authorities, Boolean accountNonExpired,
-			Boolean accountNonLocked, Boolean credentialsNonExpired, Boolean enabled, Date dob) {
+	public String getFirstName() {
+		return firstName;
+	}
+	public void setFirstName(String firstName) {
+		this.firstName = firstName;
+	}
+	public String getLastName() {
+		return lastName;
+	}
+	public void setLastName(String lastName) {
+		this.lastName = lastName;
+	}
+	public String getEmail() {
+		return email;
+	}
+	public void setEmail(String email) {
+		this.email = email;
+	}
+	
+	
+	public String getMobile() {
+		return mobile;
+	}
+	public void setMobile(String mobile) {
+		this.mobile = mobile;
+	}
+	
+	public AppUser(Integer id, String username, String password, String firstName, String lastName,
+			Set<Authority> authorities, Date dob, String mobile, String email, Boolean accountNonExpired,
+			Boolean accountNonLocked, Boolean credentialsNonExpired, Boolean enabled) {
 		super();
 		this.id = id;
 		this.username = username;
 		this.password = password;
+		this.firstName = firstName;
+		this.lastName = lastName;
 		this.authorities = authorities;
+		this.dob = dob;
+		this.mobile = mobile;
+		this.email = email;
 		this.accountNonExpired = accountNonExpired;
 		this.accountNonLocked = accountNonLocked;
 		this.credentialsNonExpired = credentialsNonExpired;
 		this.enabled = enabled;
-		this.dob = dob;
 	}
-	
 	public AppUser() {}
+	
+	public static AppUser toAppUser(CommonUserDetails commonUserDetails) {
+		AppUser appUser = new AppUser();
+		appUser.setId(commonUserDetails.getId());
+		appUser.setUsername(commonUserDetails.getUserName());
+		appUser.setPassword(commonUserDetails.getPassword());
+		appUser.setAuthorities(null);
+		appUser.setAccountNonExpired(true);
+		appUser.setAccountNonLocked(true);
+		appUser.setCredentialsNonExpired(true);
+		appUser.setEnabled(true);
+		appUser.setDob(commonUserDetails.getDob());
+		appUser.setEmail(commonUserDetails.getEmail());
+		appUser.setFirstName(commonUserDetails.getFirstName());
+		appUser.setLastName(commonUserDetails.getLastName());
+		appUser.setMobile(commonUserDetails.getMobile());
+		
+		return appUser;
+	}
+	public static CommonUserDetails toCommonUserDetails(AppUser appUser) {
+		CommonUserDetails commonUserDetails = new CommonUserDetails();
+		commonUserDetails.setId(appUser.getId());
+		commonUserDetails.setUserName(appUser.getUsername());
+		commonUserDetails.setPassword(appUser.getPassword());
+		commonUserDetails.setDob(appUser.getDob());
+		commonUserDetails.setFirstName(appUser.getFirstName());
+		commonUserDetails.setLastName(appUser.getLastName());
+		commonUserDetails.setEmail(appUser.getEmail());
+		commonUserDetails.setMobile(appUser.getMobile());
+		
+		return commonUserDetails;
+	}
 }

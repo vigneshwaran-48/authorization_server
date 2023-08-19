@@ -2,7 +2,6 @@ package com.auth.service;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -16,7 +15,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.provisioning.UserDetailsManager;
 import org.springframework.stereotype.Service;
 
-import com.auth.exception.UserExistsException;
+import com.auth.common.exception.UserExistsException;
+import com.auth.common.model.CommonUserDetails;
+import com.auth.common.service.AppUserService;
 import com.auth.model.AppUser;
 import com.auth.model.Authority;
 import com.auth.repository.AuthorityRepository;
@@ -38,6 +39,13 @@ public class UserDetailsManagerService implements UserDetailsManager, AppUserSer
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 		System.out.println("Loading user ..................");
 		AppUser appUser = userRepository.findByUsername(username);
+		
+		if(appUser == null) {
+			appUser = userRepository.findByEmail(username)
+									.orElseThrow(
+											() -> new UsernameNotFoundException("User not found"));
+		}
+		
 		Collection<GrantedAuthority> authorities = new HashSet<>();
 		appUser.getAuthorities().forEach(authority -> {
 			authorities.add(new SimpleGrantedAuthority(authority.getAuthority()));
@@ -107,7 +115,9 @@ public class UserDetailsManagerService implements UserDetailsManager, AppUserSer
 	}
 
 	@Override
-	public Integer createUser(AppUser appUser) throws UserExistsException {
+	public Integer createUser(CommonUserDetails user) throws UserExistsException {
+		AppUser appUser = AppUser.toAppUser(user);
+		
 		if(userExists(appUser.getUsername())) {
 			throw new UserExistsException("User name exists");
 		}
@@ -131,23 +141,25 @@ public class UserDetailsManagerService implements UserDetailsManager, AppUserSer
 	}
 
 	@Override
-	public void updateUser(AppUser appUser) {
-		if(!userExists(appUser.getUsername()) && findByUserId(appUser.getId()) == null ) {
+	public void updateUser(CommonUserDetails user) {
+		AppUser appUser = AppUser.toAppUser(user);
+		
+		if(!userExists(appUser.getUsername()) && findByUserId(appUser.getId()) == null) {
 			throw new UsernameNotFoundException("User not found");
 		}
 		userRepository.save(appUser);
 	}
 
 	@Override
-	public AppUser findByUserId(Integer id) {
+	public CommonUserDetails findByUserId(Integer id) {
 		AppUser user = userRepository.findById(id)
 									 .orElse(null);
-		return user;
+		return AppUser.toCommonUserDetails(user);
 	}
 
 	@Override
-	public AppUser findByUserName(String name) {
+	public CommonUserDetails findByUserName(String name) {
 		AppUser user = userRepository.findByUsername(name);
-		return user;
+		return AppUser.toCommonUserDetails(user);
 	}
 }

@@ -1,6 +1,20 @@
 package com.auth.model;
 
 import java.time.Instant;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.springframework.security.jackson2.SecurityJackson2Modules;
+import org.springframework.security.oauth2.core.AuthorizationGrantType;
+import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
+import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
+import org.springframework.security.oauth2.server.authorization.jackson2.OAuth2AuthorizationServerJackson2Module;
+import org.springframework.util.StringUtils;
+
+import com.auth.common.model.CommonClientDetails;
+import com.auth.service.RegisteredClientRepositoryImpl;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -10,6 +24,8 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "client")
 public class Client {
+	
+	private static ObjectMapper objectMapper = new ObjectMapper();
 	
 	@Id
 	private String id;
@@ -124,4 +140,60 @@ public class Client {
 	}
 	public Client() {}
 	
+	public static Client toClient(CommonClientDetails commonClientDetails) {
+		
+		Client client = new Client();
+		
+		client.setId(commonClientDetails.getId());
+		client.setClientId(commonClientDetails.getClientId());
+		client.setClientIdIssuedAt(commonClientDetails.getClientIdIssuedAt());
+		client.setClientSecret(commonClientDetails.getClientSecret());
+		client.setClientSecretExpiresAt(commonClientDetails.getClientSecretExpiresAt());
+		client.setClientName(commonClientDetails.getClientName());
+		client.setClientAuthenticationMethods(commonClientDetails.getClientAuthenticationMethods());
+		client.setAuthorizationGrantTypes(commonClientDetails.getAuthorizationGrantTypes());
+		client.setRedirectUris(commonClientDetails.getRedirectUris());
+		client.setScopes(commonClientDetails.getScopes());
+		client.setClientSettings(commonClientDetails.getClientSettings());
+		client.setTokenSettings(commonClientDetails.getTokenSettings());
+		
+		return client;
+	}
+	public static Client toClient(RegisteredClient registeredClient) {
+		List<String> clientAuthMethods = registeredClient.getClientAuthenticationMethods().stream()
+				.map(ClientAuthenticationMethod::getValue).collect(Collectors.toList());
+		List<String> authorizationGrantTypes = registeredClient.getAuthorizationGrantTypes().stream()
+				.map(AuthorizationGrantType::getValue).collect(Collectors.toList());
+
+		Client client = new Client();
+		client.setId(registeredClient.getId());
+		client.setClientId(registeredClient.getClientId());
+		client.setClientName(registeredClient.getClientName());
+		client.setClientSecret(registeredClient.getClientSecret());
+		client.setClientSecretExpiresAt(registeredClient.getClientSecretExpiresAt());
+		client.setClientIdIssuedAt(registeredClient.getClientIdIssuedAt());
+		client.setClientAuthenticationMethods(StringUtils.collectionToCommaDelimitedString(clientAuthMethods));
+		client.setAuthorizationGrantTypes(StringUtils.collectionToCommaDelimitedString(authorizationGrantTypes));
+		client.setRedirectUris(StringUtils.collectionToCommaDelimitedString(registeredClient.getRedirectUris()));
+		client.setScopes(StringUtils.collectionToCommaDelimitedString(registeredClient.getScopes()));
+		client.setClientSettings(writeMap(registeredClient.getClientSettings().getSettings()));
+		client.setTokenSettings(writeMap(registeredClient.getTokenSettings().getSettings()));
+
+		return client;
+	}
+	
+	private static String writeMap(Map<String, Object> data) {
+		try {
+			return objectMapper.writeValueAsString(data);
+		} catch (Exception ex) {
+			throw new IllegalArgumentException(ex.getMessage(), ex);
+		}
+	}
+	
+	static {
+		ClassLoader classLoader = Client.class.getClassLoader();
+		List<com.fasterxml.jackson.databind.Module> securityModules = SecurityJackson2Modules.getModules(classLoader);
+		objectMapper.registerModules(securityModules);
+		objectMapper.registerModule(new OAuth2AuthorizationServerJackson2Module());
+	}
 }
